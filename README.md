@@ -49,3 +49,18 @@ terraform plan -var-file=production.tfvars
 terraform apply -var-file=production.tfvars
 ```
 
+## Python Lambda
+### Prerequisities
+Create bucket to upload inventory files to s3. And provide the bucket name in python code for the variable 'BUCKET'
+
+### Python lambda
+You can find the lambda function under python-lambda/compliance_check.py
+
+### Create lambda using Terraform
+Go to python-lambda folder and run the following commands
+1. Run terraform init , plan and apply
+```
+terraform init
+terraform plan
+terraform apply
+```
