@@ -71,11 +71,12 @@ def upload_inventory_to_s3(problematic_instances):
     filename = "inventory.csv"
     csv_columns = ["ImageId", "InstanceId", "InstanceType", "Tags", "Error"]
     s3_client = get_s3_client()
-    mode='w'
+    mode='w' #Create new inventory.csv in s3
+
     try:
         # download s3 csv file to lambda tmp folder
         s3_client.download_file(BUCKET,filename,csv_file)
-        mode='a'
+        mode='a' #append the report if the inventory exists already.
         print("inventory downloaded")
     except Exception as e:
         print("inventory not found already")
@@ -96,22 +97,22 @@ def upload_inventory_to_s3(problematic_instances):
         print(e)
 
 def alert_tag_compliance(problematic_instances,test=False):
-    
-    if not test:
-        print("Alert!!!! Problematic instances are below")
-        print(problematic_instances)
-    upload_inventory_to_s3(problematic_instances)
+    if len(problematic_instances) > 0:
+        if not test:
+            print("Alert!!!! Problematic instances are below")
+            print(problematic_instances)
+        upload_inventory_to_s3(problematic_instances)
 
 
 def lambda_handler(event, context):
     test = False
-    if not os.environ.get('test'):
+    if os.environ.get('test'):
         test = os.environ.get('test').lower() == "true"
     
-    print("Test2",test)
     find_service_tag_values()
     problematic_instances = check_instances_tag()
-    alert_tag_compliance(problematic_instances,test)
+    alert_tag_compliance(problematic_instances, test)
+
     return {
     "statusCode": 200,
     "body": problematic_instances
