@@ -17,8 +17,22 @@ terraform {
   required_version = ">= 0.13.5"
 }
 
+data "terraform_remote_state" "iam_config" {
+  backend = "s3"
+  config = {
+    bucket = "terraform-remote-state-20-11-2021"
+    key    = "iam_role/iam.tfstate"
+    region = "us-west-2"
+  }
+}
+
 provider "aws" {
   region = var.region
+  profile = data.terraform_remote_state.iam_config.terraform_user
+  assume_role {
+    role_arn     =  data.terraform_remote_state.iam_config.terraform_assume_role
+    session_name = "TERRAFORM"    
+  }
 }
 
 provider "tls" {
@@ -33,48 +47,9 @@ data "terraform_remote_state" "network_config" {
   }
 }
 
-resource "aws_iam_role" "ec2-iam-role" {
-  name = "ec2-iam-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "iam-role-policy" {
-  name   = "iam-role-policy"
-  role   = aws_iam_role.ec2-iam-role.id
-  policy = <<EOF
-{
-    "Version" : "2012-10-17",
-    "Statement" : [
-        {
-            "Effect" : "Allow",
-            "Action" : [
-                "ec2:*",
-                "elasticloadbalancing:*",
-                "cloudwatch:*",
-                "logs:*"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-  EOF
-}
-
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "EC2-IAM-Instance-profile"
-  role = aws_iam_role.ec2-iam-role.name
+  role = aws_iam_role.ec2_iam_role.name
 
 }
 

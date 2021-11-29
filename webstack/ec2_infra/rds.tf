@@ -10,4 +10,5 @@ resource "aws_db_instance" "production_mysql" {
   skip_final_snapshot  = true
   db_subnet_group_name = data.terraform_remote_state.network_config.outputs.db_subnet_group
   vpc_security_group_ids =  [ aws_security_group.mysql_sg.id ]
+  iam_database_authentication_enabled = true
 }

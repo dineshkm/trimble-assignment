@@ -14,10 +14,23 @@ terraform {
   required_version = ">= 0.13.5"
 }
 
-provider "aws" {
-  region = var.region
+data "terraform_remote_state" "iam_config" {
+  backend = "s3"
+  config = {
+    bucket = "terraform-remote-state-20-11-2021"
+    key    = "iam_role/iam.tfstate"
+    region = "us-west-2"
+  }
 }
 
+provider "aws" {
+  region = var.region
+  profile = data.terraform_remote_state.iam_config.terraform_user
+  assume_role {
+    role_arn     =  data.terraform_remote_state.iam_config.terraform_assume_role
+    session_name = "TERRAFORM"    
+  }
+}
 #VPC
 resource "aws_vpc" "production_vpc" {
   cidr_block           = var.vpc_cidr
