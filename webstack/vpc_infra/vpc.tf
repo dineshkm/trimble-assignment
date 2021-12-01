@@ -25,9 +25,10 @@ data "terraform_remote_state" "iam_config" {
 
 provider "aws" {
   region = var.region
-  profile = data.terraform_remote_state.iam_config.terraform_user
+  access_key = data.terraform_remote_state.iam_config.outputs.iam_secret_id
+  secret_key = data.terraform_remote_state.iam_config.outputs.iam_secret_access_key
   assume_role {
-    role_arn     =  data.terraform_remote_state.iam_config.terraform_assume_role
+    role_arn     =  data.terraform_remote_state.iam_config.outputs.terraform_assume_role
     session_name = "TERRAFORM"    
   }
 }
